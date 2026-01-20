@@ -122,10 +122,32 @@ EventSchema.pre('save', function (next) {
 
   // Normalize date to ISO format (YYYY-MM-DD)
   if (this.isModified('date')) {
-    const dateObj = new Date(this.date);
-    if (isNaN(dateObj.getTime())) {
+    // Enforce YYYY-MM-DD format to avoid timezone ambiguity
+    const dateFormatRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = this.date.match(dateFormatRegex);
+    
+    if (!match) {
+      return next(new Error('Invalid date format. Expected YYYY-MM-DD'));
+    }
+    
+    const [, year, month, day] = match;
+    const yearNum = parseInt(year, 10);
+    const monthNum = parseInt(month, 10);
+    const dayNum = parseInt(day, 10);
+    
+    // Construct UTC date to avoid timezone issues
+    const dateObj = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+    
+    // Validate the date is real (e.g., not 2024-02-31)
+    if (
+      isNaN(dateObj.getTime()) ||
+      dateObj.getUTCFullYear() !== yearNum ||
+      dateObj.getUTCMonth() !== monthNum - 1 ||
+      dateObj.getUTCDate() !== dayNum
+    ) {
       return next(new Error('Invalid date format'));
     }
+    
     this.date = dateObj.toISOString().split('T')[0];
   }
 
