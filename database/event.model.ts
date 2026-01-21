@@ -29,7 +29,6 @@ const EventSchema = new Schema<IEvent>(
     },
     slug: {
       type: String,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -127,7 +126,7 @@ EventSchema.pre('save', function (next) {
     const match = this.date.match(dateFormatRegex);
     
     if (!match) {
-      return next(new Error('Invalid date format. Expected YYYY-MM-DD'));
+      return new Error('Invalid date format. Expected YYYY-MM-DD');
     }
     
     const [, year, month, day] = match;
@@ -145,7 +144,7 @@ EventSchema.pre('save', function (next) {
       dateObj.getUTCMonth() !== monthNum - 1 ||
       dateObj.getUTCDate() !== dayNum
     ) {
-      return next(new Error('Invalid date format'));
+      return new Error('Invalid date format');
     }
     
     this.date = dateObj.toISOString().split('T')[0];
@@ -155,18 +154,20 @@ EventSchema.pre('save', function (next) {
   if (this.isModified('time')) {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
     if (!timeRegex.test(this.time)) {
-      return next(new Error('Time must be in HH:MM format'));
+      return new Error('Time must be in HH:MM format');
     }
     // Ensure two-digit hour format
     const [hour, minute] = this.time.split(':');
     this.time = `${hour.padStart(2, '0')}:${minute}`;
   }
 
-  next();
 });
 
 // Create unique index on slug for faster queries and uniqueness enforcement
 EventSchema.index({ slug: 1 }, { unique: true });
+
+// Create compound index for common queries
+EventSchema.index({ date: 1, mode: 1 });
 
 // Use existing model if available (prevents Next.js hot reload issues)
 const Event = models.Event || model<IEvent>('Event', EventSchema);

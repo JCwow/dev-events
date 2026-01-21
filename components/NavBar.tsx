@@ -11,7 +11,7 @@ const NavBar = () => {
         });
     };
 
-    return <header>
+    return <header className={"text-white"}>
         <nav>
             <Link href={"/"} className={"logo"} onClick={() => handleNavClick('logo')}>
                 <Image src={"/icons/logo.png"} alt={"logo"} width={24} height={24}></Image>
