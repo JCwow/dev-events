@@ -48,7 +48,7 @@ BookingSchema.pre('save', async function (next) {
       const eventExists = await Event.exists({ _id: this.eventId });
       
       if (!eventExists) {
-        return next(new Error('Referenced event does not exist'));
+        return next(new Error('Referenced events does not exist'));
       }
     } catch (error) {
       return next(error as Error);
@@ -58,10 +58,10 @@ BookingSchema.pre('save', async function (next) {
   next();
 });
 
-// Index on eventId for faster queries when fetching bookings by event
+// Index on eventId for faster queries when fetching bookings by events
 BookingSchema.index({ eventId: 1 });
 
-// Additional composite index for event-email uniqueness (prevents duplicate bookings)
+// Additional composite index for events-email uniqueness (prevents duplicate bookings)
 BookingSchema.index({ eventId: 1, email: 1 }, { unique: true });
 
 // Use existing model if available (prevents Next.js hot reload issues)

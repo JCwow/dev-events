@@ -15,17 +15,9 @@ interface Props {
 }
 
 const EventCards = ({title, image, slug, date, time, location}:Props) => {
-    const handleClick = () => {
-        posthog.capture('event_card_clicked', {
-            event_title: title,
-            event_slug: slug,
-            event_location: location,
-            event_date: date,
-        });
-    };
 
     return (
-        <Link href={`/events/${slug}}`} id={"event-card"} onClick={handleClick}>
+        <Link href={`/events/${slug}`} id="event-card" >
             <Image src={image} alt={title} width={410} height={300} className={"poster"}></Image>
             <div className={"flex flex-row gap-2"}>
                 <Image src={"/icons/pin.svg"} alt={"location"} width={14} height={14}></Image>
