@@ -5,8 +5,6 @@ import {IEvent} from "@/database";
 import {cacheLife} from "next/cache";
 import {headers} from "next/headers";
 
-export const dynamic = 'force-dynamic';
-
 const getBaseUrl = async () => {
   if (process.env.NEXT_PUBLIC_BASE_URL) {
     return process.env.NEXT_PUBLIC_BASE_URL;
