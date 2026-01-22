@@ -48,6 +48,36 @@ const EventTags = ({ tags }: { tags: string[] }) => (
     </div>
 );
 
+const normalizeStringList = (value: unknown): string[] => {
+    if (Array.isArray(value)) {
+        if (
+            value.length === 1 &&
+            typeof value[0] === "string" &&
+            value[0].trim().startsWith("[") &&
+            value[0].trim().endsWith("]")
+        ) {
+            try {
+                const parsed = JSON.parse(value[0]);
+                return Array.isArray(parsed) ? parsed.map(String) : value.map(String);
+            } catch {
+                return value.map(String);
+            }
+        }
+        return value.map(String);
+    }
+
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed.map(String) : [value];
+        } catch {
+            return [value];
+        }
+    }
+
+    return [];
+};
+
 /* ---------------------------
    DATA COMPONENT
 ---------------------------- */
@@ -86,6 +116,9 @@ async function EventDetailsContent({
         organizer,
     } = data.data;
 
+    const normalizedTags = normalizeStringList(tags);
+    const normalizedAgenda = normalizeStringList(agenda);
+
     return (
         <>
             <div className="header">
@@ -118,14 +151,14 @@ async function EventDetailsContent({
                         <EventDetailItem icon="/icons/audience.svg" alt="audience" label={audience} />
                     </section>
 
-                    <EventAgenda agendaItems={agenda} />
+                    <EventAgenda agendaItems={normalizedAgenda} />
 
                     <section className="flex-col-gap-2">
                         <h2>About the Organizer</h2>
                         <p>{organizer}</p>
                     </section>
 
-                    <EventTags tags={tags} />
+                    <EventTags tags={normalizedTags} />
                 </div>
 
                 {/* Right Side - Booking */}
