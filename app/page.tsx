@@ -4,12 +4,23 @@ import EventCards from "@/components/EventCards";
 import {IEvent} from "@/database";
 import {cacheLife} from "next/cache";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
 const page = async () => {
     'use cache';
     cacheLife('hours')
-    const response = await fetch(`${BASE_URL}/api/events`);
+    const response = await fetch(`${BASE_URL}/api/events`, { cache: 'no-store' });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch events: ${response.status} ${errorText}`);
+    }
+
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+        const errorText = await response.text();
+        throw new Error(`Invalid JSON response: ${errorText}`);
+    }
+
     const {events} = await response.json();
 
     return (
