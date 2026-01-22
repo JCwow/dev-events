@@ -3,13 +3,31 @@ import ExploreBtn from "@/components/ExploreBtn";
 import EventCards from "@/components/EventCards";
 import {IEvent} from "@/database";
 import {cacheLife} from "next/cache";
+import {headers} from "next/headers";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+export const dynamic = 'force-dynamic';
+
+const getBaseUrl = async () => {
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+
+  const headerList = await headers();
+  const host = headerList.get('host');
+  const proto = headerList.get('x-forwarded-proto') ?? 'http';
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  return 'http://localhost:3000';
+};
 
 const page = async () => {
     'use cache';
     cacheLife('hours')
-    const response = await fetch(`${BASE_URL}/api/events`, { cache: 'no-store' });
+    const baseUrl = await getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/events`, { cache: 'no-store' });
     if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to fetch events: ${response.status} ${errorText}`);
