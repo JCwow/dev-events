@@ -1,43 +1,20 @@
 import React from 'react'
 import ExploreBtn from "@/components/ExploreBtn";
 import EventCards from "@/components/EventCards";
-import {IEvent} from "@/database";
+import {Event, IEvent} from "@/database";
 import {cacheLife} from "next/cache";
-import {headers} from "next/headers";
+import connectDB from "@/lib/mongodb";
 
-const getBaseUrl = async () => {
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
-  }
-
-  const headerList = await headers();
-  const host = headerList.get('host');
-  const proto = headerList.get('x-forwarded-proto') ?? 'http';
-
-  if (host) {
-    return `${proto}://${host}`;
-  }
-
-  return 'http://localhost:3000';
+const getEvents = async () => {
+    'use cache';
+    cacheLife('hours');
+    await connectDB();
+    const events = await Event.find().sort({createdAt: -1}).lean();
+    return JSON.parse(JSON.stringify(events)) as IEvent[];
 };
 
 const page = async () => {
-    'use cache';
-    cacheLife('hours')
-    const baseUrl = await getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/events`, { cache: 'no-store' });
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch events: ${response.status} ${errorText}`);
-    }
-
-    const contentType = response.headers.get('content-type') ?? '';
-    if (!contentType.includes('application/json')) {
-        const errorText = await response.text();
-        throw new Error(`Invalid JSON response: ${errorText}`);
-    }
-
-    const {events} = await response.json();
+    const events = await getEvents();
 
     return (
     <section>
