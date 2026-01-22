@@ -38,24 +38,17 @@ const BookingSchema = new Schema<IBooking>(
  * Pre-save hook to validate that the referenced Event exists
  * Prevents orphaned bookings by ensuring data integrity
  */
-BookingSchema.pre('save', async function (next) {
+BookingSchema.pre('save', async function () {
   // Only validate eventId if it's new or modified
-  if (this.isModified('eventId')) {
-    try {
-      // Dynamically import Event model to avoid circular dependency issues
-      const Event = models.Event || (await import('./event.model')).default;
-      
-      const eventExists = await Event.exists({ _id: this.eventId });
-      
-      if (!eventExists) {
-        return next(new Error('Referenced events does not exist'));
-      }
-    } catch (error) {
-      return next(error as Error);
-    }
+  if (!this.isModified('eventId')) return;
+
+  // Dynamically import Event model to avoid circular dependency issues
+  const Event = models.Event || (await import('./event.model')).default;
+  const eventExists = await Event.exists({ _id: this.eventId });
+
+  if (!eventExists) {
+    throw new Error('Referenced event does not exist');
   }
-  
-  next();
 });
 
 // Index on eventId for faster queries when fetching bookings by events
